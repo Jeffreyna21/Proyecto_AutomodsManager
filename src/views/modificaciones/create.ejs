@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agregar Modificación - AutoMods Manager</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="container">
+    <h1>Agregar Modificación</h1>
+    <p style="color: #718096; margin-bottom: 30px;">
+      Para: <strong><%= auto.marca %> <%= auto.modelo %> (<%= auto.anio %>)</strong>
+    </p>
+
+    <% if (error && error.length > 0) { %>
+      <% error.forEach(msg => { %>
+        <div class="alert alert-error"><%= msg %></div>
+      <% }) %>
+    <% } %>
+
+    <div class="card">
+      <form action="/autos/<%= auto.id %>/modificaciones" method="POST">
+        <div class="form-group">
+          <label for="nombre">Nombre de la Modificación *</label>
+          <input type="text" id="nombre" name="nombre" placeholder="Ej: Escape deportivo, Suspensión ajustable..." required>
+        </div>
+
+        <div class="form-group">
+          <label for="descripcion">Descripción</label>
+          <input type="text" id="descripcion" name="descripcion" placeholder="Descripción opcional de la modificación">
+        </div>
+
+        <div class="form-group">
+          <label for="id_tipo_modificacion">Tipo de Modificación *</label>
+          <select id="id_tipo_modificacion" name="id_tipo_modificacion" required>
+            <option value="">Seleccione un tipo</option>
+            <% tipos.forEach(tipo => { %>
+              <option value="<%= tipo.id %>"><%= tipo.nombre %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Nivel de Impacto *</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="nivel_impacto" value="Bajo" required>
+              <span>Bajo (1)</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="nivel_impacto" value="Medio">
+              <span>Medio (2)</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="nivel_impacto" value="Alto">
+              <span>Alto (3)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="costo">Costo (USD) *</label>
+          <input type="number" id="costo" name="costo" step="0.01" min="0.01" placeholder="0.00" required>
+        </div>
+
+        <div class="form-group">
+          <label for="fecha">Fecha de la Modificación *</label>
+          <input type="date" id="fecha" name="fecha" required max="<%= new Date().toISOString().split('T')[0] %>">
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-success">Guardar Modificación</button>
+          <a href="/autos/<%= auto.id %>" class="btn btn-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

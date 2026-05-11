@@ -1,0 +1,10 @@
+<nav>
+  <h1>🚗 AutoMods Manager</h1>
+  <div class="nav-links">
+    <% if (user) { %>
+      <span style="color: #cbd5e0;">Hola, <%= user.username %></span>
+      <a href="/autos">Mis Autos</a>
+      <a href="/logout">Cerrar Sesión</a>
+    <% } %>
+  </div>
+</nav>

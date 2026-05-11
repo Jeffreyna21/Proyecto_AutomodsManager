@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análisis - <%= auto.marca %> <%= auto.modelo %> - AutoMods Manager</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+      <h1>Análisis Detallado</h1>
+      <a href="/autos/<%= auto.id %>" class="btn btn-secondary">← Volver al Auto</a>
+    </div>
+
+    <p style="color: #718096; margin-bottom: 20px;">
+      <strong><%= auto.marca %> <%= auto.modelo %></strong> (<%= auto.anio %>) — Placa: <%= auto.placa %>
+    </p>
+
+    <!-- Resumen de métricas -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2>Resumen de Métricas</h2>
+        <% if (analisis) { %>
+          <span class="indicador indicador-<%= analisis.indicador.toLowerCase().replace(' ', '-') %>">
+            <%= analisis.indicador %>
+          </span>
+        <% } else { %>
+          <span class="indicador indicador-sin-datos">Sin datos</span>
+        <% } %>
+      </div>
+
+      <% if (analisis && analisis.numero_modificaciones > 0) { %>
+        <div class="metricas-grid">
+          <div class="metrica-item">
+            <div class="valor"><%= analisis.impacto_total %></div>
+            <div class="label">Impacto Total</div>
+          </div>
+          <div class="metrica-item">
+            <div class="valor">$<%= analisis.costo_total.toLocaleString('es-MX', { minimumFractionDigits: 2 }) %></div>
+            <div class="label">Costo Total</div>
+          </div>
+          <div class="metrica-item">
+            <div class="valor"><%= analisis.promedio_mejora !== null ? analisis.promedio_mejora.toFixed(2) : 'N/A' %></div>
+            <div class="label">Promedio Mejora</div>
+          </div>
+          <div class="metrica-item">
+            <div class="valor"><%= analisis.costo_beneficio !== null ? analisis.costo_beneficio.toFixed(4) : 'N/A' %></div>
+            <div class="label">Costo/Beneficio</div>
+          </div>
+          <div class="metrica-item">
+            <div class="valor"><%= analisis.numero_modificaciones %></div>
+            <div class="label">Modificaciones</div>
+          </div>
+        </div>
+
+        <% if (analisis.indicador === 'Deficiente') { %>
+          <div class="mensaje-analisis mensaje-deficiente">
+            El rendimiento acumulado es bajo. Considera modificaciones de mayor impacto.
+          </div>
+        <% } else if (analisis.indicador === 'Regular') { %>
+          <div class="mensaje-analisis mensaje-regular">
+            Mejora consistente. Considera modificaciones de mayor impacto para alcanzar nivel Excelente.
+          </div>
+        <% } else if (analisis.indicador === 'Excelente') { %>
+          <div class="mensaje-analisis mensaje-excelente">
+            El vehículo presenta un nivel óptimo de mejora.
+          </div>
+        <% } %>
+      <% } else { %>
+        <div class="mensaje-analisis mensaje-sin-datos">
+          Aún no hay modificaciones registradas. Registra la primera para ver el análisis.
+        </div>
+      <% } %>
+    </div>
+
+    <% if (modificaciones.length > 0) { %>
+      <!-- Gráficos -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="card">
+          <h2>Evolución del Impacto</h2>
+          <canvas id="graficoEvolucion"></canvas>
+        </div>
+
+        <div class="card">
+          <h2>Distribución por Tipo</h2>
+          <canvas id="graficoDistribucion"></canvas>
+        </div>
+      </div>
+
+      <!-- Historial completo -->
+      <div class="card" style="margin-top: 20px;">
+        <h2>Historial Completo de Modificaciones</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Impacto</th>
+              <th>Costo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% modificaciones.forEach(mod => { %>
+              <tr>
+                <td><%= new Date(mod.fecha).toLocaleDateString('es-MX') %></td>
+                <td><%= mod.nombre %></td>
+                <td><%= mod.tipo %></td>
+                <td>
+                  <span class="badge badge-<%= mod.nivel_impacto.toLowerCase() %>">
+                    <%= mod.nivel_impacto %>
+                  </span>
+                </td>
+                <td>$<%= parseFloat(mod.costo).toLocaleString('es-MX', { minimumFractionDigits: 2 }) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+
+  <% if (modificaciones.length > 0) { %>
+  <script>
+    // Datos para gráficos (ordenados por fecha ASC)
+    const modificaciones = <%- JSON.stringify(modificaciones.slice().reverse()) %>;
+    const valorImpacto = { 'Bajo': 1, 'Medio': 2, 'Alto': 3 };
+
+    // Gráfico de evolución de impacto acumulado
+    const fechas = modificaciones.map(m => new Date(m.fecha).toLocaleDateString('es-MX'));
+    let acumulado = 0;
+    const impactoAcumulado = modificaciones.map(m => {
+      acumulado += valorImpacto[m.nivel_impacto] || 0;
+      return acumulado;
+    });
+
+    new Chart(document.getElementById('graficoEvolucion'), {
+      type: 'line',
+      data: {
+        labels: fechas,
+        datasets: [{
+          label: 'Impacto acumulado',
+          data: impactoAcumulado,
+          borderColor: '#667eea',
+          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Impacto' } },
+          x: { title: { display: true, text: 'Fecha' } }
+        }
+      }
+    });
+
+    // Gráfico de distribución por tipo
+    const conteoTipos = {};
+    modificaciones.forEach(m => {
+      conteoTipos[m.tipo] = (conteoTipos[m.tipo] || 0) + 1;
+    });
+
+    const coloresTipos = ['#667eea', '#48bb78', '#f6ad55', '#fc8181', '#b794f4'];
+
+    new Chart(document.getElementById('graficoDistribucion'), {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(conteoTipos),
+        datasets: [{
+          data: Object.values(conteoTipos),
+          backgroundColor: coloresTipos.slice(0, Object.keys(conteoTipos).length)
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' }
+        }
+      }
+    });
+  </script>
+  <% } %>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

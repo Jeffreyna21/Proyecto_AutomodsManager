@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= auto.marca %> <%= auto.modelo %> - AutoMods Manager</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+      <h1><%= auto.marca %> <%= auto.modelo %></h1>
+      <a href="/autos" class="btn btn-secondary">← Volver</a>
+    </div>
+
+    <% if (success && success.length > 0) { %>
+      <% success.forEach(msg => { %>
+        <div class="alert alert-success"><%= msg %></div>
+      <% }) %>
+    <% } %>
+
+    <% if (error && error.length > 0) { %>
+      <% error.forEach(msg => { %>
+        <div class="alert alert-error"><%= msg %></div>
+      <% }) %>
+    <% } %>
+
+    <div class="card">
+      <h2>Detalles del Auto</h2>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <strong>Placa</strong>
+          <span><%= auto.placa %></span>
+        </div>
+        <div class="detail-item">
+          <strong>Marca</strong>
+          <span><%= auto.marca %></span>
+        </div>
+        <div class="detail-item">
+          <strong>Modelo</strong>
+          <span><%= auto.modelo %></span>
+        </div>
+        <div class="detail-item">
+          <strong>Año</strong>
+          <span><%= auto.anio %></span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a href="/autos/<%= auto.id %>/edit" class="btn btn-primary">Editar Auto</a>
+        <form action="/autos/<%= auto.id %>?_method=DELETE" method="POST" style="display: inline;" onsubmit="return confirm('¿Estás seguro? Esto eliminará el auto y todas sus modificaciones.')">
+          <button type="submit" class="btn btn-danger">Eliminar Auto</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Panel de Análisis -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2>Análisis de Rendimiento</h2>
+        <% if (analisis) { %>
+          <span class="indicador indicador-<%= analisis.indicador.toLowerCase().replace(' ', '-') %>">
+            <%= analisis.indicador %>
+          </span>
+        <% } else { %>
+          <span class="indicador indicador-sin-datos">Sin datos</span>
+        <% } %>
+      </div>
+
+      <% if (analisis && analisis.numero_modificaciones > 0) { %>
+        <div class="metricas-grid">
+          <div class="metrica-item">
+            <div class="valor"><%= analisis.impacto_total %></div>
+            <div class="label">Impacto Total</div>
+          </div>
+          <div class="metrica-item">
+            <div class="valor">$<%= analisis.costo_total.toLocaleString('es-MX', { minimumFractionDigits: 2 }) %></div>
+            <div class="label">Costo Total</div>
+          </div>
+          <div class="metrica-item">
+            <div class="valor"><%= analisis.promedio_mejora !== null ? analisis.promedio_mejora.toFixed(2) : 'N/A' %></div>
+            <div class="label">Promedio Mejora</div>
+          </div>
+          <div class="metrica-item">
+            <div class="valor"><%= analisis.costo_beneficio !== null ? analisis.costo_beneficio.toFixed(4) : 'N/A' %></div>
+            <div class="label">Costo/Beneficio</div>
+          </div>
+          <div class="metrica-item">
+            <div class="valor"><%= analisis.numero_modificaciones %></div>
+            <div class="label">Modificaciones</div>
+          </div>
+        </div>
+
+        <% if (analisis.indicador === 'Deficiente') { %>
+          <div class="mensaje-analisis mensaje-deficiente">
+            El rendimiento acumulado es bajo. Considera modificaciones de mayor impacto.
+          </div>
+        <% } else if (analisis.indicador === 'Regular') { %>
+          <div class="mensaje-analisis mensaje-regular">
+            Mejora consistente. Considera modificaciones de mayor impacto para alcanzar nivel Excelente.
+          </div>
+        <% } else if (analisis.indicador === 'Excelente') { %>
+          <div class="mensaje-analisis mensaje-excelente">
+            El vehículo presenta un nivel óptimo de mejora.
+          </div>
+        <% } %>
+
+        <a href="/autos/<%= auto.id %>/analisis" class="btn btn-primary" style="margin-top: 15px;">
+          Ver Análisis Detallado
+        </a>
+      <% } else { %>
+        <div class="mensaje-analisis mensaje-sin-datos">
+          Aún no hay modificaciones registradas. Registra la primera para ver el análisis.
+        </div>
+      <% } %>
+    </div>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Modificaciones</h2>
+        <a href="/autos/<%= auto.id %>/modificaciones/new" class="btn btn-success">+ Agregar Modificación</a>
+      </div>
+
+      <% if (modificaciones.length === 0) { %>
+        <div class="empty-state">
+          <p>No hay modificaciones registradas para este auto</p>
+        </div>
+      <% } else { %>
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Impacto</th>
+              <th>Costo</th>
+              <th>Fecha</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% modificaciones.forEach(mod => { %>
+              <tr>
+                <td><%= mod.nombre %></td>
+                <td><%= mod.tipo %></td>
+                <td>
+                  <span class="badge badge-<%= mod.nivel_impacto.toLowerCase() %>">
+                    <%= mod.nivel_impacto %>
+                  </span>
+                </td>
+                <td>$<%= parseFloat(mod.costo).toLocaleString('es-MX', { minimumFractionDigits: 2 }) %></td>
+                <td><%= new Date(mod.fecha).toLocaleDateString('es-MX') %></td>
+                <td>
+                  <div class="actions">
+                    <a href="/modificaciones/<%= mod.id %>/edit" class="btn btn-primary">Editar</a>
+                    <form action="/modificaciones/<%= mod.id %>?_method=DELETE" method="POST" style="display: inline;" onsubmit="return confirm('¿Estás seguro de eliminar esta modificación?')">
+                      <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+
+      <% } %>
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>
