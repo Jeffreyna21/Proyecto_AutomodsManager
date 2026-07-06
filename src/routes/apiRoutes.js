@@ -5,8 +5,10 @@ const { marcaModel, modeloModel } = require('../models/catalogoModel');
 
 router.use(requireAuth);
 
-// GET /api/marcas/:id/modelos — devuelve modelos asociados a una marca
-router.get('/marcas/:id/modelos', (req, res) => {
+// GET /api/marcas/:id/modelos — devuelve modelos asociados a una marca.
+// PR 3: el router se monta en /api/marcas (no en /api) para no
+// interceptar las llamadas a la nueva API v1 con su `requireAuth`.
+router.get('/:id/modelos', (req, res) => {
   try {
     const { id } = req.params;
     const marca = marcaModel.getById(parseInt(id));
