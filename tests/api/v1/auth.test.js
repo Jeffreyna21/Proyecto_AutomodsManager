@@ -4,6 +4,7 @@ const express = require('express');
 const session = require('express-session');
 const request = require('supertest');
 const { createInMemoryDb, closeInMemoryDb, SEED_USUARIOS } = require('../../helpers/inMemoryDb');
+const { buildApiApp } = require('../../helpers/apiApp');
 
 const CONTAINER_PATH = '../../../src/container';
 
@@ -15,26 +16,16 @@ const CONTAINER_PATH = '../../../src/container';
 async function buildAuthApp() {
   const { buildContainer, _resetContainer } = require(CONTAINER_PATH);
   const authRoutes = require('../../../src/api/v1/auth.routes');
-  const { errorHandler } = require('../../../src/middlewares/errorEnvelope');
 
   _resetContainer();
   const db = await createInMemoryDb();
   const container = await buildContainer({ db });
 
-  const app = express();
-  app.use(express.json());
-  app.use(session({
-    secret: 'test-secret',
-    resave: false,
-    saveUninitialized: false
-  }));
-  // Inyectamos el container por request para que las rutas lo lean.
-  app.use((req, _res, next) => {
-    req.container = container;
-    next();
+  // /api/v1/auth se monta automáticamente en el helper
+  const app = buildApiApp({
+    container,
+    mounts: []
   });
-  app.use('/api/v1/auth', authRoutes);
-  app.use(errorHandler);
 
   return {
     app,

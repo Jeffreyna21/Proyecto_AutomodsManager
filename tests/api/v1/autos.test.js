@@ -19,8 +19,7 @@ async function buildAutosApp() {
   const container = await buildContainer({ db });
   const app = buildApiApp({
     container,
-    mountPath: '/api/v1/autos',
-    routes: autosRoutes
+    mounts: [{ mountPath: '/api/v1/autos', routes: autosRoutes }]
   });
 
   return {
