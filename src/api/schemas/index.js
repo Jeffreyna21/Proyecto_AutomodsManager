@@ -123,10 +123,17 @@ const updateModificacionSchema = z.object({
   { message: 'Debe enviar al menos un campo para actualizar' }
 );
 
+// --- Catálogos (paths) ---
+
+const idMarcaPathSchema = z.coerce.number({ message: 'id debe ser numérico' })
+  .int('id debe ser un entero')
+  .positive('id debe ser positivo');
+
 module.exports = {
   loginSchema,
   createAutoSchema,
   updateAutoSchema,
   createModificacionSchema,
-  updateModificacionSchema
+  updateModificacionSchema,
+  idMarcaPathSchema
 };
