@@ -18,13 +18,7 @@ services:
         value: /tmp/automods.db
     healthCheckPath: /api/v1/auth/me
 
-  - type: static
-    name: automods-spa
-    runtime: static
-    rootDir: apps/web
-    buildCommand: pnpm install --frozen-lockfile && pnpm run build
-    staticPublishPath: dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+  # El SPA React se sirve desde el mismo backend Express bajo /app/*
+  # (configurado en src/app.js con express.static sobre apps/web/dist).
+  # No hace falta un segundo servicio: type: static no es un tipo válido
+  # en Render Blueprint.
