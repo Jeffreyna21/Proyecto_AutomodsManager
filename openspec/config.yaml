@@ -35,7 +35,7 @@ stack:
 # Testing capabilities — used by sdd-apply (RED-GREEN-REFACTOR) and sdd-verify.
 testing:
   runner: node:test
-  command: node --test tests/*.test.js
+  command: node --test "tests/**/*.test.js"
   strict_tdd: true
   layers:
     unit:
@@ -99,7 +99,7 @@ rules:
     tdd: true
     test_command: node --test tests/*.test.js
   verify:
-    test_command: node --test tests/*.test.js
+    test_command: node --test "tests/**/*.test.js"
     build_command: node -c server.js
     coverage_command: ""
     coverage_threshold: 0
