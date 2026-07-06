@@ -96,6 +96,20 @@ async function buildApp(opts = {}) {
   // Captura errores thrown/next(err) en cualquier router de la API.
   app.use('/api/v1', apiErrorHandler);
 
+  // --- SPA React (apps/web/dist) ---
+  // El build de Vite produce apps/web/dist. En produccion Express lo
+  // sirve bajo /app/* con fallback a index.html para rutas de cliente.
+  // En desarrollo (sin dist) el proxy de Vite se encarga.
+  // Usamos un regex porque path-to-regexp v8 (Express 5) no acepta '*'
+  // sin nombre de parametro.
+  const webDistPath = path.join(__dirname, '..', 'apps', 'web', 'dist');
+  app.use('/app', express.static(webDistPath));
+  app.get(/^\/app(\/.*)?$/, (req, res, next) => {
+    res.sendFile(path.join(webDistPath, 'index.html'), (err) => {
+      if (err) next(err);
+    });
+  });
+
   // --- Handlers EJS para todo lo demas (404, 500) ---
   app.use((req, res) => {
     res.status(404).render('partials/error', {
