@@ -16,7 +16,7 @@ services:
         value: '10000'
       - key: DATABASE_PATH
         value: /tmp/automods.db
-    healthCheckPath: /api/v1/auth/me
+    healthCheckPath: /health
 
   # El SPA React se sirve desde el mismo backend Express bajo /app/*
   # (configurado en src/app.js con express.static sobre apps/web/dist).
