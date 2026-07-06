@@ -96,6 +96,15 @@ async function buildApp(opts = {}) {
   // Captura errores thrown/next(err) en cualquier router de la API.
   app.use('/api/v1', apiErrorHandler);
 
+  // --- Health check (Render) ---
+  // Devuelve 200 siempre que el proceso Express este vivo. Se usa como
+  // healthCheckPath en render.yaml. NO usar /api/v1/auth/me porque ese
+  // endpoint devuelve 401 sin sesion y Render lo marca como unhealthy
+  // y mata el proceso con Timed Out.
+  app.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
   // --- SPA React (apps/web/dist) ---
   // El build de Vite produce apps/web/dist. En produccion Express lo
   // sirve bajo /app/* con fallback a index.html para rutas de cliente.
