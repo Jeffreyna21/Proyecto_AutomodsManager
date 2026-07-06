@@ -4,3 +4,8 @@ database/*.db
 .DS_Store
 *.log
 pnpm-debug.log*
+package-lock.json
+yarn.lock
+.vscode/
+coverage/
+apps/*/dist/
