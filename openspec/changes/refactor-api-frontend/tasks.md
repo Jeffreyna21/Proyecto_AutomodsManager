@@ -179,52 +179,52 @@ largest PR because it establishes every architectural seam)
 
 ### Tasks
 
-- [ ] **2.1** `ImpactValueFactory` (single source of `VALOR_IMPACTO`)
+- [x] **2.1** `ImpactValueFactory` (single source of `VALOR_IMPACTO`)
   - **What:** Pure module exporting `valorImpacto(nivel)` returning `1|2|3` for `bajo|medio|alto`; throws on unknown.
   - **Files:** `src/services/indicators/impactoValues.js` (new, ~20 lines); `tests/indicators/impactoValues.test.js` (new, ~30 lines).
   - **Tests:** RED: assert `valorImpacto("medio") === 2`, throws on `"critico"`, throws on `null/undefined/""`. GREEN: implement with frozen `MAP` constant. REFACTOR: extract `KNOWN_LEVELS` Set.
   - **Depends on:** —
   - **Estimate (LOC delta):** ~50
 
-- [ ] **2.2** Indicator strategies + `IndicadorClassifier` orchestrator
+- [x] **2.2** Indicator strategies + `IndicadorClassifier` orchestrator
   - **What:** 4 strategy classes with `cumple(metricas)` predicate; `IndicadorClassifier` iterates them in priority order; thresholds loaded from `config.js`.
   - **Files:** `src/services/indicators/config.js` (~12); `DeficienteStrategy.js` (~10); `RegularStrategy.js` (~10); `ExcelenteStrategy.js` (~10); `SinDatosStrategy.js` (~8); `IndicadorClassifier.js` (~20) — 6 new files, ~70 lines total.
   - **Tests:** `tests/indicators/IndicadorClassifier.test.js` (new, ~50 lines) — boundary cases at 1.4999, 1.5, 2.4999, 2.5; empty data → SinDatos; register new strategy at runtime.
   - **Depends on:** 2.1
   - **Estimate (LOC delta):** ~120
 
-- [ ] **2.3** Event-name constants (`src/domain/events/events.js`)
+- [x] **2.3** Event-name constants (`src/domain/events/events.js`)
   - **What:** Frozen object exporting `MODIFICACION_CREATED | UPDATED | DELETED` strings.
   - **Files:** `src/domain/events/events.js` (new, ~10 lines); `tests/domain/events.test.js` (new, ~15 lines).
   - **Tests:** RED: assert `events.MODIFICACION_CREATED === 'modificacion.created'`. GREEN: export frozen object. REFACTOR: add JSDoc.
   - **Depends on:** 1.2
   - **Estimate (LOC delta):** ~25
 
-- [ ] **2.4** `AnalisisRecalcObserver`
+- [x] **2.4** `AnalisisRecalcObserver`
   - **What:** Subscribes to all 3 Modificacion events; calls `analisisService.recalcular(autoId)`; rethrows on error.
   - **Files:** `src/domain/observers/AnalisisRecalcObserver.js` (new, ~25 lines); `tests/domain/observers/AnalisisRecalcObserver.test.js` (new, ~35 lines).
   - **Tests:** RED: emit `ModificacionChanged { autoId: 7 }` and assert spy called once with `7`; rethrow test; no-op on bus without listener. GREEN: implement. REFACTOR: extract payload destructuring.
   - **Depends on:** 2.3
   - **Estimate (LOC delta):** ~60
 
-- [ ] **2.5** Refactor `analisisService.js` to pure calc + Observer wiring
+- [x] **2.5** Refactor `analisisService.js` to pure calc + Observer wiring
   - **What:** Remove the inline `VALOR_IMPACTO` map and the `db.run()` writes; replace with `calcularMetricas` (pure) + use of `IndicadorClassifier`; wire observer in container.
   - **Files:** `src/services/analisisService.js` (modify, -40/+20 = ~20 net); `src/container.js` (modify, +15 lines for observer registration); `tests/analisisService.test.js` (modify, +15 lines).
   - **Tests:** Existing `analisisService.test.js` keeps passing; new assertion that `calcularMetricas` no longer touches DB (mocked `analisisRepository`).
   - **Depends on:** 2.2, 2.4
   - **Estimate (LOC delta):** ~10 (net, after deletions)
 
-- [ ] **2.6** ImpactValueFactory test suite
+- [x] **2.6** ImpactValueFactory test suite
   - **What:** Grouped review of the test file created under 2.1.
   - **Depends on:** 2.1
   - **Estimate (LOC delta):** included in 2.1
 
-- [ ] **2.7** Strategy test suite
+- [x] **2.7** Strategy test suite
   - **What:** Grouped review of the test file created under 2.2.
   - **Depends on:** 2.2
   - **Estimate (LOC delta):** included in 2.2
 
-- [ ] **2.8** Observer + cascada end-to-end test
+- [x] **2.8** Observer + cascada end-to-end test
   - **What:** Integration test wiring the real bus, real `ModificacionRepository`, and a stub `AnalisisService`; asserts recalc fires exactly once after `ModificacionRepository.create()`.
   - **Files:** `tests/integration/cascada.test.js` (new, ~40 lines).
   - **Tests:** RED: emit + assert no listener (fresh bus). GREEN: register observer. REFACTOR: parametrize over create/update/delete.

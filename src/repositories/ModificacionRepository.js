@@ -1,4 +1,6 @@
 const BaseRepository = require('./BaseRepository');
+const events = require('../domain/events/events');
+const ModificacionEvent = require('../domain/events/ModificacionEvent');
 
 const MOD_BASE_SELECT = `
   SELECT m.id, m.nombre, m.descripcion, m.costo, m.nivel_impacto,
@@ -24,9 +26,15 @@ function rowToDto(row) {
 }
 
 class ModificacionRepository extends BaseRepository {
-  constructor(db) {
+  /**
+   * @param {*} db  sql.js Database handle
+   * @param {object} [opts]
+   * @param {{ emit: Function }} [opts.bus]  in-process event bus (optional)
+   */
+  constructor(db, opts = {}) {
     super();
     this.db = db;
+    this.bus = opts.bus || null;
   }
 
   findById(id) {
@@ -54,7 +62,10 @@ class ModificacionRepository extends BaseRepository {
       [nombre, descripcion, costo, nivelImpacto, fecha, autoId, idTipoModificacion]
     );
     const result = this.db.exec('SELECT last_insert_rowid()');
-    return this.findById(result[0].values[0][0]);
+    const newId = result[0].values[0][0];
+    const dto = this.findById(newId);
+    this._emit(events.MODIFICACION_CREATED, { autoId, modificacionId: newId });
+    return dto;
   }
 
   update(id, { nombre, descripcion, costo, nivelImpacto, fecha, idTipoModificacion }) {
@@ -75,13 +86,31 @@ class ModificacionRepository extends BaseRepository {
        WHERE id = ?`,
       [next.nombre, next.descripcion, next.costo, next.nivelImpacto, next.fecha, next.idTipoModificacion, id]
     );
-    return this.findById(id);
+    const dto = this.findById(id);
+    this._emit(events.MODIFICACION_UPDATED, { autoId: current.auto_id, modificacionId: id });
+    return dto;
   }
 
   delete(id) {
+    // Look up the autoId BEFORE the row is gone (we need it for the event)
+    const current = this.findById(id);
     this.db.run('DELETE FROM modificaciones WHERE id = ?', [id]);
     const result = this.db.exec('SELECT changes()');
-    return result[0].values[0][0];
+    const deletedCount = result[0].values[0][0];
+    if (deletedCount > 0 && current) {
+      this._emit(events.MODIFICACION_DELETED, { autoId: current.auto_id, modificacionId: id });
+    }
+    return deletedCount;
+  }
+
+  /**
+   * Internal helper — emit an event through the injected bus (if any).
+   * No-op when the repo was constructed without a bus so legacy code
+   * paths that don't care about events keep working.
+   */
+  _emit(type, payload) {
+    if (!this.bus || typeof this.bus.emit !== 'function') return;
+    this.bus.emit(type, ModificacionEvent.create(payload, type));
   }
 }
 
