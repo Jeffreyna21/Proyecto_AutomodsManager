@@ -39,6 +39,12 @@ function buildApiApp({ container, mounts = [], mountAuth = true, sessionOpts }) 
     // o un array de middlewares)
     app.use(mountPath, routes);
   }
+  // 404 JSON para rutas no encontradas bajo los mounts configurados
+  app.use((req, res) => {
+    res.status(404).json({
+      error: { code: 'NOT_FOUND', message: 'Ruta no encontrada en /api/v1' }
+    });
+  });
   app.use(errorHandler);
   return app;
 }
