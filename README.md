@@ -19,13 +19,15 @@ Sistema de gestión de vehículos y modificaciones con análisis de rendimiento,
 
 - **Backend**: Node.js (v18+) + Express.js 5
 - **Motor de vistas**: EJS
+- **Frontend React**: Vite 5 + React 18 (SPA en `apps/web/`, servida en `/app/`)
+- **API REST**: JSON en `/api/v1` con envelope de errores estándar
 - **Base de datos**: SQLite (sql.js - WebAssembly)
 - **Autenticación**: express-session + bcryptjs
-- **Validación**: express-validator + validador de dominio personalizado
+- **Validación**: Zod (API) + validador de dominio personalizado
 - **Gráficos**: Chart.js 4 (CDN)
 - **Testing**: Node.js Test Runner nativo (node:test + node:assert)
-- **Gestor de paquetes**: pnpm
-- **Patrón**: MVC con capa de servicios/dominio
+- **Gestor de paquetes**: pnpm + monorepo (pnpm-workspace.yaml)
+- **Patrón**: Layered architecture (Repository, Strategy, Factory, Observer, Policy)
 
 ## Estructura del Proyecto
 
@@ -208,3 +210,31 @@ Proyecto desarrollado para la asignatura Ingeniería Web.
 ## Licencia
 
 ISC
+
+## Deploy con Render (Blueprint)
+
+El repositorio incluye `render.yaml` en la raíz con dos servicios configurados
+para hacer deploy con un click:
+
+1. **automods-api** (web service, Node.js): ejecuta el backend Express + sirve
+   el SPA estático compilado bajo `/app/*`.
+2. **automods-spa** (static site): publica `apps/web/dist` con rewrite a
+   `index.html` para soportar rutas de cliente.
+
+### Pasos para desplegar
+
+1. Hacer click en el botón **"New Blueprint Instance"** en Render.
+2. Conectar el repositorio `Jeffreyna21/Proyecto_AutomodsManager`.
+3. Render detecta `render.yaml` automáticamente y propone ambos servicios.
+4. Confirmar. Render genera `SESSION_SECRET` automáticamente.
+5. (Opcional) Configurar `DATABASE_PATH=/tmp/automods.db` (ya viene por default).
+
+### URLs resultantes
+
+- `https://automods-api.onrender.com/` → Vistas EJS (login tradicional, full HTML)
+- `https://automods-api.onrender.com/api/v1/...` → API JSON
+- `https://automods-spa.onrender.com/` → SPA React (frontend moderno)
+- `https://automods-spa.onrender.com/app/` → SPA servida desde el backend
+
+> El backend en Render free tier duerme tras 15 min sin tráfico. La primera
+> petición puede tardar ~30s mientras arranca.
